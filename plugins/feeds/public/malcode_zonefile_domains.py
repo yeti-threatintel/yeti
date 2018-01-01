@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from core.observables import Hostname
@@ -6,13 +6,12 @@ from core.feed import Feed
 from core.errors import ObservableValidationError
 
 
-class HostsFileEMD(Feed):
+class MalcodeZonefileDomains(Feed):
     default_values = {
         'frequency': timedelta(hours=1),
-        'source': 'https://hosts-file.net/emd.txt',
-        'name': 'HostsFileEMD',
-        'description': 'Sites engaged in malware distribution.'
-
+        'source': 'http://malc0de.com/bl/ZONES',
+        'name': 'MalcodeZoneFileDomains',
+        'description': 'Malc0de Bind Zone File: Domains serving malicious executables observed by malc0de.com/database/'
     }
 
     def update(self):
@@ -20,7 +19,7 @@ class HostsFileEMD(Feed):
             self.analyze(line)
 
     def analyze(self, line):
-        if line.startswith('#'):
+        if line.startswith('//'):
             return
 
         try:
@@ -31,10 +30,10 @@ class HostsFileEMD(Feed):
             }
 
             try:
-                host = Hostname.get_or_create(value=hostname)
-                host.add_context(context)
-                host.add_source('feed')
-                host.tag(['malware'])
+                hostname = Hostname.get_or_create(value=hostname)
+                hostname.add_context(context)
+                hostname.add_source('feed')
+                hostname.tag(['blocklist'])
             except ObservableValidationError as e:
                 logging.error(e)
         except Exception as e:

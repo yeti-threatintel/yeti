@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from core.observables import Hostname
@@ -6,12 +6,12 @@ from core.feed import Feed
 from core.errors import ObservableValidationError
 
 
-class HostsFileEXP(Feed):
+class JoeweinSpamBlocklistNewDomain(Feed):
     default_values = {
-        'frequency': timedelta(hours=4),
-        'source': 'https://hosts-file.net/exp.txt',
-        'name': 'HostsFileEXP',
-        'description': 'Sites engaged in the housing, development or distribution of exploits, including but not limited to exploitation of browser, software (inclusive of website software such as CMS), operating system exploits aswell as those engaged in exploits via social engineering.'
+        'frequency': timedelta(hours=1),
+        'source': 'http://www.joewein.net/dl/bl/dom-bl.txt',
+        'name': 'JoeweinSpamBlocklistNewDomain',
+        'description': 'Information about domains that have been advertised via spam ("spamvertized"). Additions made during the last week or two only. Every domain listed has appeared inside unsolicited bulk email, either advertised or as a genuine return address or both.'
     }
 
     def update(self):
@@ -23,8 +23,8 @@ class HostsFileEXP(Feed):
             return
 
         try:
-            parts = line.split()
-            hostname = str(parts[1])
+            parts = line.split(';')
+            hostname = str(parts[0])
             context = {
                 'source': self.name
             }
@@ -33,7 +33,7 @@ class HostsFileEXP(Feed):
                 host = Hostname.get_or_create(value=hostname)
                 host.add_context(context)
                 host.add_source('feed')
-                host.tag(['exploit'])
+                host.tag(['spam'])
             except ObservableValidationError as e:
                 logging.error(e)
         except Exception as e:

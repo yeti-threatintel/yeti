@@ -1,17 +1,17 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
-from core.observables import Hostname
+from core.observables import Ip
 from core.feed import Feed
 from core.errors import ObservableValidationError
 
 
-class HostsFileEMD(Feed):
+class BlocklistdeSIPIP(Feed):
     default_values = {
         'frequency': timedelta(hours=1),
-        'source': 'https://hosts-file.net/emd.txt',
-        'name': 'HostsFileEMD',
-        'description': 'Sites engaged in malware distribution.'
+        'source': 'https://lists.blocklist.de/lists/sip.txt',
+        'name': 'BlocklistdeSIPIP',
+        'description': 'Blocklist.de SIP/VOIP IP Blocklist: All IP addresses that tried to login in a SIP, VOIP, or Asterisk-Server and are included in the IPs-List from http://www.infiltrated.net/ (Twitter)'
 
     }
 
@@ -25,16 +25,16 @@ class HostsFileEMD(Feed):
 
         try:
             parts = line.split()
-            hostname = str(parts[1])
+            ip = str(parts[0])
             context = {
                 'source': self.name
             }
 
             try:
-                host = Hostname.get_or_create(value=hostname)
-                host.add_context(context)
-                host.add_source('feed')
-                host.tag(['malware'])
+                ip = Ip.get_or_create(value=ip)
+                ip.add_context(context)
+                ip.add_source('feed')
+                ip.tag(['blocklist', 'voip', 'sip'])
             except ObservableValidationError as e:
                 logging.error(e)
         except Exception as e:

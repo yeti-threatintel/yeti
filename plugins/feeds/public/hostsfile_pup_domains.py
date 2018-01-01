@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from core.observables import Hostname
@@ -6,12 +6,12 @@ from core.feed import Feed
 from core.errors import ObservableValidationError
 
 
-class HostsFileEXP(Feed):
+class HostsFilePuPDomains(Feed):
     default_values = {
-        'frequency': timedelta(hours=4),
-        'source': 'https://hosts-file.net/exp.txt',
-        'name': 'HostsFileEXP',
-        'description': 'Sites engaged in the housing, development or distribution of exploits, including but not limited to exploitation of browser, software (inclusive of website software such as CMS), operating system exploits aswell as those engaged in exploits via social engineering.'
+        'frequency': timedelta(hours=1),
+        'source': 'https://hosts-file.net/pup.txt',
+        'name': 'HostsFilePuPDomains',
+        'description': 'Contains PuP (Potentially Unwanted Programs) sites listed in the hpHosts database by Domain.'
     }
 
     def update(self):
@@ -33,7 +33,7 @@ class HostsFileEXP(Feed):
                 host = Hostname.get_or_create(value=hostname)
                 host.add_context(context)
                 host.add_source('feed')
-                host.tag(['exploit'])
+                host.tag(['pup'])
             except ObservableValidationError as e:
                 logging.error(e)
         except Exception as e:

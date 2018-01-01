@@ -6,34 +6,33 @@ from core.feed import Feed
 from core.errors import ObservableValidationError
 
 
-class HostsFileFSA(Feed):
+class SagadcMicrosoftBotnetDomains(Feed):
     default_values = {
         'frequency': timedelta(hours=4),
-        'source': 'https://hosts-file.net/fsa.txt',
-        'name': 'HostsFileFSA',
-        'description': 'Sites engaged in the selling or distribution of bogus or fraudulent applications and/or provision of fraudulent services.'
+        'name': 'SagadcMicrosoftBotnetDomains',
+        'source': 'http://dns-bh.sagadc.org/Microsoft-Botnet-domains-no-ip.txt',
+        'description': 'SAGADC.org Microsoft Botnet Domains (Last updated in 2015)'
     }
 
     def update(self):
-        for line in self.update_lines():
-            self.analyze(line)
+        for hostname in self.update_lines():
+            self.analyze(hostname)
 
     def analyze(self, line):
         if line.startswith('#'):
             return
-
         try:
             parts = line.split()
-            hostname = str(parts[1])
+            hostname = str(parts[0])
             context = {
                 'source': self.name
             }
 
             try:
-                host = Hostname.get_or_create(value=hostname)
-                host.add_context(context)
-                host.add_source('feed')
-                host.tag(['fraud'])
+                hostname = Hostname.get_or_create(value=hostname)
+                hostname.add_context(context)
+                hostname.add_source('feed')
+                hostname.tag(['botnet', 'microsoft', 'blocklist'])
             except ObservableValidationError as e:
                 logging.error(e)
         except Exception as e:

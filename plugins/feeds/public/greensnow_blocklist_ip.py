@@ -1,18 +1,17 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
-from core.observables import Hostname
+from core.observables import Ip
 from core.feed import Feed
 from core.errors import ObservableValidationError
 
 
-class HostsFileEMD(Feed):
+class GreensnowBlocklistIP(Feed):
     default_values = {
         'frequency': timedelta(hours=1),
-        'source': 'https://hosts-file.net/emd.txt',
-        'name': 'HostsFileEMD',
-        'description': 'Sites engaged in malware distribution.'
-
+        'source': 'https://blocklist.greensnow.co/greensnow.txt',
+        'name': 'GreensnowBlocklistIP',
+        'description': 'Attacks / bruteforce that are monitored are: Scan Port, FTP, POP3, mod_security, IMAP, SMTP, SSH, cPanel ...'
     }
 
     def update(self):
@@ -25,16 +24,16 @@ class HostsFileEMD(Feed):
 
         try:
             parts = line.split()
-            hostname = str(parts[1])
+            ip = str(parts[0])
             context = {
                 'source': self.name
             }
 
             try:
-                host = Hostname.get_or_create(value=hostname)
-                host.add_context(context)
-                host.add_source('feed')
-                host.tag(['malware'])
+                ip = Ip.get_or_create(value=ip)
+                ip.add_context(context)
+                ip.add_source('feed')
+                ip.tag(['blocklist'])
             except ObservableValidationError as e:
                 logging.error(e)
         except Exception as e:

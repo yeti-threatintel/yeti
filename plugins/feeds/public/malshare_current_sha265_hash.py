@@ -1,18 +1,17 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
-from core.observables import Hostname
+from core.observables import Hash
 from core.feed import Feed
 from core.errors import ObservableValidationError
 
 
-class HostsFileEMD(Feed):
+class MalshareCurrentSHA256(Feed):
     default_values = {
         'frequency': timedelta(hours=1),
-        'source': 'https://hosts-file.net/emd.txt',
-        'name': 'HostsFileEMD',
-        'description': 'Sites engaged in malware distribution.'
-
+        'source': 'http://www.malshare.com/daily/malshare.current.sha256.txt',
+        'name': 'MalshareCurrentSHA256',
+        'description': 'Malshare Current List SHA256 Hashes'
     }
 
     def update(self):
@@ -25,16 +24,16 @@ class HostsFileEMD(Feed):
 
         try:
             parts = line.split()
-            hostname = str(parts[1])
+            hash = str(parts[0])
             context = {
                 'source': self.name
             }
 
             try:
-                host = Hostname.get_or_create(value=hostname)
-                host.add_context(context)
-                host.add_source('feed')
-                host.tag(['malware'])
+                hash = Hash.get_or_create(value=hash)
+                hash.add_context(context)
+                hash.add_source('feed')
+                hash.tag(['malware'])
             except ObservableValidationError as e:
                 logging.error(e)
         except Exception as e:

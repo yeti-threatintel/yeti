@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+import datetime
 import logging
 
 from core.observables import Hostname
@@ -6,13 +6,12 @@ from core.feed import Feed
 from core.errors import ObservableValidationError
 
 
-class HostsFileEMD(Feed):
+class ZeusTrackerBlocklistDomains(Feed):
     default_values = {
-        'frequency': timedelta(hours=1),
-        'source': 'https://hosts-file.net/emd.txt',
-        'name': 'HostsFileEMD',
-        'description': 'Sites engaged in malware distribution.'
-
+        'frequency': datetime.timedelta(hours=1),
+        'source': 'https://zeustracker.abuse.ch/blocklist.php?download=baddomains',
+        'name': 'ZeusTrackerBlocklistDomains',
+        'description': 'abuse.ch ZeuS domain blocklist "BadDomains" (excluding hijacked sites)'
     }
 
     def update(self):
@@ -25,16 +24,16 @@ class HostsFileEMD(Feed):
 
         try:
             parts = line.split()
-            hostname = str(parts[1])
+            hostname = str(parts[0])
             context = {
                 'source': self.name
             }
 
             try:
-                host = Hostname.get_or_create(value=hostname)
-                host.add_context(context)
-                host.add_source('feed')
-                host.tag(['malware'])
+                hostname = Hostname.get_or_create(value=hostname)
+                hostname.add_context(context)
+                hostname.add_source('feed')
+                hostname.tag(['zeus', 'objective', 'banker', 'crimeware', 'malware'])
             except ObservableValidationError as e:
                 logging.error(e)
         except Exception as e:
