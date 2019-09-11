@@ -1,16 +1,21 @@
 from __future__ import unicode_literals
 
+import logging
 from flask_login import current_user
 from flask_classy import route
 from flask import request
 
+from core.user import User
 from core.observables import Observable
 from core.web.api.crud import CrudApi
 from core import analytics
+from core.config.config import yeti_config
 from core.analytics_tasks import schedule
 from core.web.api.api import render, render_json
 from core.web.helpers import get_object_or_404
 from core.web.helpers import requires_permissions
+
+shared_keys = yeti_config.get("shared_keys", "enabled", False)
 
 
 class ScheduledAnalytics(CrudApi):
@@ -78,14 +83,24 @@ class OneShotAnalytics(CrudApi):
     def index(self):
         data = []
 
+        yeti_user = False
+        if current_user.username != 'yeti':
+            try:
+                yeti_user = User.objects.get(username='yeti')
+            except Exception as e:
+                logging.info(e)
+
         for obj in self.objectmanager.objects.all():
             info = obj.info()
 
             info['available'] = True
-            if hasattr(
-                    obj,
-                    'settings') and not current_user.has_settings(obj.settings):
-                info['available'] = False
+
+            if hasattr(obj, 'settings'):
+                yeti_shared_keys = shared_keys and yeti_user and \
+                    yeti_user.has_settings(obj.settings)
+                if current_user.has_settings(obj.settings) is False and \
+                        yeti_shared_keys is False:
+                    info['available'] = False
 
             data.append(info)
 
@@ -124,6 +139,20 @@ class OneShotAnalytics(CrudApi):
         """
         analytics = get_object_or_404(self.objectmanager, id=id)
         observable = get_object_or_404(Observable, id=request.form.get('id'))
+        settings = current_user.settings
+
+        if shared_keys and current_user.username != 'yeti' and \
+                hasattr(analytics, "settings") and \
+                not current_user.has_settings(analytics.settings):
+            yeti_user = False
+            try:
+                yeti_user = User.objects.get(username='yeti')
+            except Exception as e:
+                logging.info(e)
+
+            if yeti_user:
+                for key in analytics.settings:
+                    settings[key] = yeti_user.settings.get(key)
 
         result = analytics.run(observable, current_user.settings).to_mongo()
         result.pop('settings')
