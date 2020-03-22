@@ -22,7 +22,7 @@ def login():
         u = authenticate(
             request.form.get('login'), request.form.get('password'))
         if u:
-            login_user(u)
+            login_user(u, remember=request.args.get('remember-me', False))
             print "User logged in (web):", u
             redir = request.args.get('next', '/')
             return redirect(redir)
@@ -82,7 +82,7 @@ def change_password():
         u.save()
         # re-execute the login if the changes were made on current_user
         if u.id == current_user.id:
-            login_user(u)
+            login_user(u, remember=request.args.get('remember-me', False))
         flash('Password was successfully changed.', 'success')
 
     return redirect(request.referrer)

@@ -12,7 +12,7 @@ def login():
         return redirect("/observable/")
     user = authenticate()
     if user:
-        login_user(user)
+        login_user(user, remember=request.args.get('remember-me', False))
         print "User logged in (web):", user
         return redirect(request.args.get('next', '/'))
     flash("Invalid credentials", "danger")
