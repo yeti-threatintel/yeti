@@ -217,6 +217,10 @@ class Observable(Node):
         pass
 
     def clean(self):
+        
+        if self.__class__.__name__ == "Url" and " " in self.value:
+            self.value = self.value.replace(" ", "%20")
+            
         if self.check_type(self.value):
             self.normalize()
         else:
